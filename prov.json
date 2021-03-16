@@ -1,0 +1,118 @@
+{
+  "@context": {
+    "dcat": "http://www.w3.org/ns/dcat#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "dct": "http://purl.org/dc/terms/",
+    "sdo": "http://schema.org/",
+    "cito": "http://purl.org/spar/cito/",
+    "id": "@id",
+    "type": "@type",
+    "identifier": {
+      "@id": "dct:identifier",
+      "@type": "@id"
+    },
+    "title": "dct:title",
+    "description": "dct:description",
+    "issued": "dct:issued",
+    "format": "dct:format",
+    "mediaType": "dcat:mediaType",
+    "keyword": "dcat:keyword",
+    "theme": "dcat:theme",
+    "modified": "dcat:modified",
+    "downloadURL": "dcat:downloadURL",
+    "publisher": {
+      "@id": "dcat:publisher",
+      "@type": "@id"
+    },
+    "contactPoint": {
+      "@id": "dcat:contactPoint",
+      "@type": "@id"
+    },
+    "spatial": {
+      "@id": "dct:spatial",
+      "@type": "@id"
+    },
+    "temporal": {
+      "@id": "dct:temporal",
+      "@type": "@id"
+    },
+    "license": {
+      "@id": "dct:license",
+      "@type": "@id"
+    },
+    "creator": {
+      "@id": "dcat:creator",
+      "@type": "@id"
+    },
+    "compressFormat": "dcat:compressFormat",
+    "byteSize": "dcat:byteSize",
+    "wasGeneratedAtTime": "prov:wasGeneratedAtTime",
+    "startedAtTime": "prov:startedAtTime",
+    "endedAtTime": "prov:startedAtTime",
+    "wasDerivedFrom": {
+      "@id": "prov:wasDerivedFrom",
+      "@type": "@id"
+    },
+    "wasGeneratedBy": {
+      "@id": "prov:wasGeneratedBy",
+      "@type": "@id"
+    },
+    "generated": {
+      "@id": "prov:generated",
+      "@type": "@id"
+    },
+    "used": {
+      "@id": "prov:used",
+      "@type": "@id"
+    },
+    "wasRevisionOf": {
+      "@id": "prov:wasRevisionOf",
+      "@type": "@id"
+    },
+    "isDocumentedBy": {
+      "@id": "cito:isDocumentedBy",
+      "@type": "@id"
+    },
+    "distribution": {
+      "@id": "dcat:distribution",
+      "@type": "@id"
+    },
+    "Dataset": "dcat:Dataset",
+    "Activity": "prov:Activity",
+    "Distribution": "dcat:Distribution",
+    "SoftwareSourceCode": "sdo:SoftwareSourceCode"
+  },
+  "@graph": [
+    [
+      {
+        "type": ["Distribution", "SoftwareSourceCode"],
+        "id": "hash://sha256/9d93f80e08817528c788cf17207479e9f5469183e3b835cc83d050ee31e68d3b",
+        "identifier": "hash://sha256/9d93f80e08817528c788cf17207479e9f5469183e3b835cc83d050ee31e68d3b",
+        "title": "02_generate_targets_aquatics.R",
+        "description": "R code",
+        "format": "application/R"
+      }
+    ],
+    [
+      {
+        "id": "hash://sha256/92207caf7e0a2900576eedbf5c923d266e6247e1a69ae5b8789028fd4b836910",
+        "type": "Distribution",
+        "identifier": "hash://sha256/92207caf7e0a2900576eedbf5c923d266e6247e1a69ae5b8789028fd4b836910",
+        "title": "aquatics-targets.csv.gz",
+        "description": "output data",
+        "format": "application/gzip",
+        "compressFormat": "gzip",
+        "byteSize": 79450,
+        "wasGeneratedAtTime": "2021-03-16 10:21:05",
+        "wasGeneratedBy": {
+          "type": "Activity",
+          "id": "urn:uuid:7229621c-8d3c-45be-9674-919308dea41f",
+          "description": "Running R script",
+          "used": "hash://sha256/9d93f80e08817528c788cf17207479e9f5469183e3b835cc83d050ee31e68d3b",
+          "generated": "hash://sha256/92207caf7e0a2900576eedbf5c923d266e6247e1a69ae5b8789028fd4b836910",
+          "endedAtTime": "2021-03-16 10:21:05"
+        }
+      }
+    ]
+  ]
+}

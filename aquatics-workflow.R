@@ -1,3 +1,4 @@
+
 message(paste0("Running Creating Aquatics Targets at ", Sys.time()))
 #remotes::install_github("cboettig/neonstore")
 
@@ -29,17 +30,17 @@ new_data3 <- neonstore::neon_download("DP1.20053.001", site =  sites, type = "ba
 
 
 if(!is.null(new_data1) | !is.null(new_data2) | !is.null(new_data3) | run_full_workflow){
-  
+
   message(paste0("Running Creating Aquatics Targets at ", Sys.time()))
-  
+
   source("02_generate_targets_aquatics.R")
-  
+
   message(paste0("Completed Aquatics Target at ", Sys.time()))
-  
+
   if(generate_null){
-    
+
     message(paste0("Running Creating Aquatics Null at ", Sys.time()))
     source("03_generate_null_forecast_aquatics.R")
   }
-  
+
 }
