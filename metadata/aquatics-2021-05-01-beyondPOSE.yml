@@ -48,9 +48,9 @@ metadata:
 #You should not add anything on the model_description lines (next line should only say model_description)
     model_description:
       # model identifier:
-      forecast_model_id: "thermod"
-      name: Roberts lake model
-      type: process #General type of model empirical, machine learning, process
+      forecast_model_id: "regress"
+      name: Muhammeds awesome regression
+      type: empirical #General type of model empirical, machine learning, process
       repository: https://github.com/GLEON/EFI_aquatic_challenge_2021        # put your GitHub Repository in here
 #
 #INITIAL CONDITIONS
