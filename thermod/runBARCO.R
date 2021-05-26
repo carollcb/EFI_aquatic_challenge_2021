@@ -51,74 +51,33 @@ parameters[19] = 3.2 # calibration parameter
 wq_parameters[19] = parameters[19] # calibration parameter
 
 # initial water temperatures & do
-yini <- c(15, 10 * 1000/1e6  * wq_parameters[1])
+yini <- c(31, 10 * 1000/1e6  * wq_parameters[1])
 
 ice_on = TRUE # ice "simulation" on or off?
-
-for (ii in 1:3){
-  print(paste0('run number: ', ii))
-
-  boundary_noise <- add_noise(boundary)
-
-  for (jj in 1:100){
-    y_noise <- yini
-    y_noise[1] <- rnorm(1, mean = y_noise[1], sd = 0.1)
-    y_noise[2] <- rnorm(1, mean = y_noise[2], sd = 100)
-
-    out <- run_oxygen_forecast(bc = boundary_noise, params = wq_parameters,
-                               ini = y_noise, times = times, ice = ice_on)
-
-    result <- data.frame('Time' = time_seq,
-                         'WT_sim' = out[,2],
-                         'DO_sim' = out[,3],
-                         'id' = as.character(ii),
-                         'ini' = as.character(jj))
-    head(result)
-    result_filter = result
-    result_filter$WT_sim = kalman_filtering(time = result_filter$Time, series = result_filter$WT_sim)
-    result_filter$DO_sim = kalman_filtering(time = result_filter$Time, series = result_filter$DO_sim)
-
-    result_filter$id = ii
-
-    result_filter <- reshape2::melt(result_filter, id = c('Time', 'id', 'ini'))
-
-    if (ii == 1){
-      df = result_filter
-    } else {
-      df <- rbind(df, result_filter)
-    }
-  }
-}
-
-head(df)
-ggplot(subset(df, variable == 'WT_sim')) +
-  geom_line(aes(Time, value, col = as.factor(id))) +
-                #linetype = ini)) +
-  # geom_ribbon(aes(x = Time, ymin = min(value),
-  #                 ymax = max(value)), fill = 'grey70') +
-  labs(x = 'Simulated Time', y = 'WT in deg C')  +
-  theme_bw()+
-  guides(col=guide_legend(title="Run")) +
-  theme(legend.position="bottom")
-
-
-
-out <- run_oxygen_forecast(bc = boundary, params = wq_parameters, ini = yini, times = times, ice = ice_on)
-
-result <- data.frame('Time' = time_seq,
-                     'WT_sim' = out[,2],
-                     'DO_sim' = out[,3],
-                     'id' = as.character(ii))
-head(result)
-result_filter = result
-result_filter$WT_sim = kalman_filtering(time = result_filter$Time, series = result_filter$WT_sim)
-result_filter$DO_sim = kalman_filtering(time = result_filter$Time, series = result_filter$DO_sim)
-
 
 obs <-read_delim(paste0('obs.txt'), delim = ',')
 obs.df <- data.frame('Time' = as.Date(obs$Date),
                      'WT_obs' = obs$Water_Temperature_celsius,
                      'DO_obs' = obs$Dissolved_Odxygen_milliGramPerLiter)
+
+bc = boundary
+params = wq_parameters
+ini = yini
+times = times
+ice = ice_on
+observed = obs.df[match(time_seq, obs.df$Time),]
+
+out <- run_temp_oxygen_forecast(bc = boundary, params = wq_parameters, ini = yini, times = times, ice = ice_on,
+                                observed = obs.df[match(time_seq, obs.df$Time),])
+
+result <- data.frame('Time' = time_seq,
+                     'WT_sim' = out[,2],
+                     'DO_sim' = out[,3])
+head(result)
+result_filter = result
+result_filter$WT_sim = kalman_filtering(time = result_filter$Time, series = result_filter$WT_sim)
+result_filter$DO_sim = kalman_filtering(time = result_filter$Time, series = result_filter$DO_sim)
+
 
 df <- merge(result_filter, obs.df, by = 'Time', all = TRUE)
 head(df)
@@ -172,3 +131,53 @@ g4 <- ggplot(output) +
   labs(x = 'Simulated Time', y = 'Fluxes in mg/(cm3 d)')  +
   theme_bw()+
   theme(legend.position="bottom");g4
+
+
+
+### forecasting framework
+
+for (ii in 1:3){
+  print(paste0('run number: ', ii))
+
+  boundary_noise <- add_noise(boundary)
+
+  for (jj in 1:100){
+    y_noise <- yini
+    y_noise[1] <- rnorm(1, mean = y_noise[1], sd = 0.1)
+    y_noise[2] <- rnorm(1, mean = y_noise[2], sd = 100)
+
+    out <- run_oxygen_forecast(bc = boundary_noise, params = wq_parameters,
+                               ini = y_noise, times = times, ice = ice_on)
+
+    result <- data.frame('Time' = time_seq,
+                         'WT_sim' = out[,2],
+                         'DO_sim' = out[,3],
+                         'id' = as.character(ii),
+                         'ini' = as.character(jj))
+    head(result)
+    result_filter = result
+    result_filter$WT_sim = kalman_filtering(time = result_filter$Time, series = result_filter$WT_sim)
+    result_filter$DO_sim = kalman_filtering(time = result_filter$Time, series = result_filter$DO_sim)
+
+    result_filter$id = ii
+
+    result_filter <- reshape2::melt(result_filter, id = c('Time', 'id', 'ini'))
+
+    if (ii == 1){
+      df = result_filter
+    } else {
+      df <- rbind(df, result_filter)
+    }
+  }
+}
+
+head(df)
+ggplot(subset(df, variable == 'WT_sim')) +
+  geom_line(aes(Time, value, col = as.factor(id))) +
+  #linetype = ini)) +
+  # geom_ribbon(aes(x = Time, ymin = min(value),
+  #                 ymax = max(value)), fill = 'grey70') +
+  labs(x = 'Simulated Time', y = 'WT in deg C')  +
+  theme_bw()+
+  guides(col=guide_legend(title="Run")) +
+  theme(legend.position="bottom")
