@@ -44,7 +44,7 @@ team_list:
 metadata:
   forecast:
     timestep: 1 day #time step of model
-    forecast_horizon: 14 days #number of time steps in the future
+    forecast_horizon: 7 days #number of time steps in the future
 #You should not add anything on the model_description lines (next line should only say model_description)
     model_description:
       # model identifier:
