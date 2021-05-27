@@ -67,43 +67,47 @@ times = times
 ice = ice_on
 observed = obs.df[match(time_seq, obs.df$Time),]
 
+result_ensemble <- c()
+for (er in 1){
+  ensemble_driver = boundary
+  out <- run_temp_oxygen_forecast(bc = ensemble_driver, params = wq_parameters, ini = yini, times = times, ice = ice_on,
+                                  observed = obs.df[match(time_seq, obs.df$Time),])
 
-
-out <- run_temp_oxygen_forecast(bc = boundary, params = wq_parameters, ini = yini, times = times, ice = ice_on,
-                                observed = obs.df[match(time_seq, obs.df$Time),])
-
-out.df <- c()
-for (j in 1:length(out)){
-  if (j == 1){
-    out.df <- unlist(out[[match(j, seq(1, length(out)))]])
-  } else {
-    out.df <- rbind(out.df, unlist(out[[match(j, seq(1, length(out)))]]))
+  out.df <- c()
+  for (j in 1:length(out)){
+    if (j == 1){
+      out.df <- unlist(out[[match(j, seq(1, length(out)))]])
+    } else {
+      out.df <- rbind(out.df, unlist(out[[match(j, seq(1, length(out)))]]))
+    }
   }
+
+  result <- data.frame('Time' = rep(time_seq, length(out)),
+                       'WT_sim' = out.df[,2],
+                       'DO_sim' = out.df[,3],
+                       'run' = rep(seq(1,100),each =length(time_seq)))
+  head(result)
+  result_filter = result %>%
+    dplyr::group_by(Time, run) %>%
+    mutate(WT_sim_kf = kalman_filtering(time = Time, series = WT_sim),
+           DO_sim_kf = kalman_filtering(time = Time, series = DO_sim))
+  # result_filter$WT_sim = kalman_filtering(time = result_filter$Time, series = result_filter$WT_sim)
+  # result_filter$DO_sim = kalman_filtering(time = result_filter$Time, series = result_filter$DO_sim)
+  head(result_filter)
+
+  result_ensemble <- rbind(result_ensemble, result_filter)
 }
 
-result <- data.frame('Time' = rep(time_seq, length(out)),
-                     'WT_sim' = out.df[,2],
-                     'DO_sim' = out.df[,3],
-                     'run' = rep(seq(1,100),each =length(time_seq)))
-head(result)
-result_filter = result %>%
-  dplyr::group_by(Time, run) %>%
-  mutate(WT_sim_kf = kalman_filtering(time = Time, series = WT_sim),
-         DO_sim_kf = kalman_filtering(time = Time, series = DO_sim))
-# result_filter$WT_sim = kalman_filtering(time = result_filter$Time, series = result_filter$WT_sim)
-# result_filter$DO_sim = kalman_filtering(time = result_filter$Time, series = result_filter$DO_sim)
-head(result_filter)
-
 forecast_period <- c("2021-02-22","2021-02-23","2021-02-24","2021-02-25","2021-02-26","2021-02-27","2021-02-28")
-result_filter %>%
+result_ensemble %>%
   dplyr::filter(Time >= min(forecast_period) & Time <= max(forecast_period)) %>%
   dplyr::group_by(Time) %>%
   summarise(mean_wtr = mean(WT_sim_kf), sd_wtr = sd(WT_sim_kf),
          mean_do = mean(DO_sim_kf), sd_do = sd(DO_sim_kf)) %>%
   select(Time, mean_wtr, sd_wtr, mean_do, sd_do)
 
-df <- merge(result_filter, obs.df, by = 'Time', all = TRUE)
-head(df)
+# df <- merge(result_filter, obs.df, by = 'Time', all = TRUE)
+# head(df)
 
 g1 <- ggplot(result_filter) +
   geom_line(aes(x=Time, y=WT_sim_kf, col=as.factor(run),
@@ -111,7 +115,7 @@ g1 <- ggplot(result_filter) +
   geom_point(data = obs.df, aes(x=Time, y=WT_obs, col='Observed'), col = 'blue') +
   labs(x = 'Simulated Time', y = 'WT in deg C')  +
   theme_bw()+
-  xlim(as.Date('2020-01-01'), as.Date('2021-03-01')) +
+  # xlim(as.Date('2020-01-01'), as.Date('2021-03-01')) +
   guides(col=guide_legend(title="Layer")) +
   theme(legend.position="none");g1
 ggsave(file='BARCO_thermod_forecast_wtemp.png', g1, dpi = 300,width = 200,height = 250, units = 'mm')
@@ -122,7 +126,7 @@ g2 <- ggplot(df) +
   geom_point(data = obs.df, aes(x=Time, y=DO_obs, col='Observed'), col = 'blue') +
   labs(x = 'Simulated Time', y = 'DO in g/m3')  +
   theme_bw()+
-  xlim(as.Date('2020-01-01'), as.Date('2021-03-01')) +
+  # xlim(as.Date('2020-01-01'), as.Date('2021-03-01')) +
   guides(col=guide_legend(title="Layer")) +
   theme(legend.position="none");g2
 ggsave(file='BARCO_thermod_forecast_do.png', g2, dpi = 300,width = 200,height = 250, units = 'mm')
