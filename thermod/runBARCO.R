@@ -34,8 +34,17 @@ bound$vW <- bound$vW * 1000/3600
 
 boundary <- bound
 
+ensemble_data <- read_delim(paste0(folder, '/../noaa-BARC-2021-05-01_daily.csv'), delim = ',')
+ensemble_bound = data.frame('Day' = max(bound$Day) + (match(ensemble_data$date,unique(ensemble_data$date))),
+                            'Jsw' = ensemble_data$Ed_short * 2.0E-5 *3600*24,
+                            'Tair' = ensemble_data$air_temperature -273.15,
+                            'Dew' = ( ensemble_data$air_temperature -273.15)  - ((100 - 100 * ensemble_data$relative_humidity)/5.),
+                            'vW' = ensemble_data$wind_speed * 1000/3600,
+                            'Uw' =  19.0 + 0.95 * (ensemble_data$wind_speed * 1000/3600)^2,
+                            'ensemble' = ensemble_data$ensemble)
+head(ensemble_bound)
 # simulation maximum length
-times <- seq(from = 1, to = max(boundary$Day), by = 1)
+# times <- seq(from = 1, to = max(boundary$Day), by = 1)
 
 start_date <- get_yaml_value(config_file, "time", "start")
 stop_date <- get_yaml_value(config_file, "time", "stop")
@@ -51,25 +60,31 @@ parameters[19] = 3.2 # calibration parameter
 wq_parameters[19] = parameters[19] # calibration parameter
 
 # initial water temperatures & do
-yini <- c(31, 10 * 1000/1e6  * wq_parameters[1])
+yini <- c(18, 10 * 1000/1e6  * wq_parameters[1])
 
 ice_on = TRUE # ice "simulation" on or off?
 
-obs <-read_delim(paste0('obs.txt'), delim = ',')
+obs <-read_delim(paste0('obs_forecast.txt'), delim = ',')
 obs.df <- data.frame('Time' = as.Date(obs$Date),
                      'WT_obs' = obs$Water_Temperature_celsius,
-                     'DO_obs' = obs$Dissolved_Odxygen_milliGramPerLiter)
-
-bc = boundary
-params = wq_parameters
-ini = yini
-times = times
-ice = ice_on
-observed = obs.df[match(time_seq, obs.df$Time),]
+                     'DO_obs' = obs$Dissolved_Oxygen_milliGramPerLiter)
 
 result_ensemble <- c()
-for (er in 1){
-  ensemble_driver = boundary
+for (ens_run in unique(ensemble_bound$ensemble)){
+  name_run <- paste0('em_',ens_run)
+  print(name_run)
+
+  ensemble_driver = rbind(boundary, subset(ensemble_bound, ensemble == ens_run)[1:15,-c(ncol(ensemble_bound))])
+
+  times <- seq(from = 1, to = max(ensemble_driver$Day), by = 1)
+
+  bc = ensemble_driver
+  params = wq_parameters
+  ini = yini
+  times = times
+  ice = ice_on
+  observed = obs.df[match(time_seq, obs.df$Time),]
+
   out <- run_temp_oxygen_forecast(bc = ensemble_driver, params = wq_parameters, ini = yini, times = times, ice = ice_on,
                                   observed = obs.df[match(time_seq, obs.df$Time),])
 
@@ -85,20 +100,30 @@ for (er in 1){
   result <- data.frame('Time' = rep(time_seq, length(out)),
                        'WT_sim' = out.df[,2],
                        'DO_sim' = out.df[,3],
-                       'run' = rep(seq(1,100),each =length(time_seq)))
+                       'run' = paste0(ens_run,'_', rep(seq(1,100),each =length(time_seq)))
+                       )
+
+  # result <- data.frame('Time' = time_seq,
+  #                      'WT_sim' = out[,2],
+  #                      'DO_sim' = out[,3],
+  #                      'run' = rep('1', length(time_seq)))
   head(result)
   result_filter = result %>%
-    dplyr::group_by(Time, run) %>%
+    dplyr::group_by(run) %>%
     mutate(WT_sim_kf = kalman_filtering(time = Time, series = WT_sim),
            DO_sim_kf = kalman_filtering(time = Time, series = DO_sim))
   # result_filter$WT_sim = kalman_filtering(time = result_filter$Time, series = result_filter$WT_sim)
   # result_filter$DO_sim = kalman_filtering(time = result_filter$Time, series = result_filter$DO_sim)
   head(result_filter)
+  result_filter$ensemble = name_run
 
   result_ensemble <- rbind(result_ensemble, result_filter)
 }
 
-forecast_period <- c("2021-02-22","2021-02-23","2021-02-24","2021-02-25","2021-02-26","2021-02-27","2021-02-28")
+save(result_ensemble, file = 'result_ensemble.RData')
+
+forecast_period <- c("2021-05-01","2021-05-02","2021-05-03","2021-05-04","2021-05-05","2021-05-06","2021-05-07",
+                     "2021-05-08")
 result_ensemble %>%
   dplyr::filter(Time >= min(forecast_period) & Time <= max(forecast_period)) %>%
   dplyr::group_by(Time) %>%
@@ -106,30 +131,72 @@ result_ensemble %>%
          mean_do = mean(DO_sim_kf), sd_do = sd(DO_sim_kf)) %>%
   select(Time, mean_wtr, sd_wtr, mean_do, sd_do)
 
+result_ensemble_df = result_ensemble
+result_ensemble_df$ensemble = NULL
+forecast_csv <- result_ensemble_df %>%
+  dplyr::filter(Time >= min(forecast_period) & Time <= max(forecast_period)) %>%
+  # dplyr::group_by(Time, run) %>%
+  dplyr::mutate('DO_sim_kf_conv' = DO_sim_kf / 1000 /  wq_parameters[1] * 1e6,
+                'siteID' = 'BARCO') %>%
+  dplyr::rename('time' = Time, 'ensemble' = run,
+                'oxygen' = DO_sim_kf_conv, 'temperature' = WT_sim_kf) %>%
+  select(time, ensemble, siteID, oxygen, temperature)
+head(forecast_csv)
+
+write.csv(x = forecast_csv, file = 'aquatics-2021-05-01-BBTW.csv', quote = F, row.names = F)
+
 # df <- merge(result_filter, obs.df, by = 'Time', all = TRUE)
 # head(df)
 
-g1 <- ggplot(result_filter) +
+g1 <- ggplot(result_ensemble) +
   geom_line(aes(x=Time, y=WT_sim_kf, col=as.factor(run),
                 group = as.factor(run))) +
   geom_point(data = obs.df, aes(x=Time, y=WT_obs, col='Observed'), col = 'blue') +
   labs(x = 'Simulated Time', y = 'WT in deg C')  +
   theme_bw()+
-  # xlim(as.Date('2020-01-01'), as.Date('2021-03-01')) +
+  xlim(as.Date('2020-01-01'), as.Date('2021-05-15')) +
+  geom_vline(xintercept= as.Date('2021-05-01'),linetype=4) +
   guides(col=guide_legend(title="Layer")) +
   theme(legend.position="none");g1
 ggsave(file='BARCO_thermod_forecast_wtemp.png', g1, dpi = 300,width = 200,height = 250, units = 'mm')
 
-g2 <- ggplot(df) +
-  geom_line(aes(x=Time, y=DO_sim/ 1000 /  wq_parameters[1] * 1e6,  col=as.factor(run),
+g2 <- ggplot(result_ensemble) +
+  geom_line(aes(x=Time, y=DO_sim_kf/ 1000 /  wq_parameters[1] * 1e6,  col=as.factor(run),
                 group = as.factor(run))) +
   geom_point(data = obs.df, aes(x=Time, y=DO_obs, col='Observed'), col = 'blue') +
   labs(x = 'Simulated Time', y = 'DO in g/m3')  +
   theme_bw()+
-  # xlim(as.Date('2020-01-01'), as.Date('2021-03-01')) +
+  xlim(as.Date('2020-01-01'), as.Date('2021-05-15')) +
+  geom_vline(xintercept= as.Date('2021-05-01'),linetype=4) +
   guides(col=guide_legend(title="Layer")) +
   theme(legend.position="none");g2
 ggsave(file='BARCO_thermod_forecast_do.png', g2, dpi = 300,width = 200,height = 250, units = 'mm')
+
+g3 <- ggplot(result_ensemble) +
+  geom_line(aes(x=Time, y=WT_sim_kf, col=as.factor(run),
+                group = as.factor(run))) +
+  geom_point(data = obs.df, aes(x=Time, y=WT_obs, col='Observed'), col = 'blue') +
+  labs(x = 'Simulated Time', y = 'WT in deg C')  +
+  theme_bw()+
+  xlim(as.Date('2021-04-30'), as.Date('2021-05-15')) +
+  geom_vline(xintercept= as.Date('2021-05-01'),linetype=4) +
+  ylim(15,20)+
+  guides(col=guide_legend(title="Layer")) +
+  theme(legend.position="none");g1
+ggsave(file='BARCO_thermod_forecast_period_wtemp.png', g3, dpi = 300,width = 250,height = 200, units = 'mm')
+
+g4 <- ggplot(result_ensemble) +
+  geom_line(aes(x=Time, y=DO_sim_kf/ 1000 /  wq_parameters[1] * 1e6,  col=as.factor(run),
+                group = as.factor(run))) +
+  geom_point(data = obs.df, aes(x=Time, y=DO_obs, col='Observed'), col = 'blue') +
+  labs(x = 'Simulated Time', y = 'DO in g/m3')  +
+  theme_bw()+
+  xlim(as.Date('2021-04-30'), as.Date('2021-05-15')) +
+  geom_vline(xintercept= as.Date('2021-05-01'),linetype=4) +
+  ylim(7,9.5) +
+  guides(col=guide_legend(title="Layer")) +
+  theme(legend.position="none");g4
+ggsave(file='BARCO_thermod_forecast_period_do.png', g4, dpi = 300,width = 250,height = 200, units = 'mm')
 
 #
 #
