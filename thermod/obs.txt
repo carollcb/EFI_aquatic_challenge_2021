@@ -1,4 +1,4 @@
-Date,Dissolved_Odxygen_milliGramPerLiter,Water_Temperature_celsius
+Date,Dissolved_Oxygen_milliGramPerLiter,Water_Temperature_celsius
 2017-08-01 00:00:00,NA,NA
 2017-08-02 00:00:00,NA,NA
 2017-08-03 00:00:00,NA,NA

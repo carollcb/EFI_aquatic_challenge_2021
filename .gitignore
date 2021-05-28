@@ -39,3 +39,6 @@ vignettes/*.pdf
 .Renviron
 
 neon_store/*
+
+# thermod files
+thermod/output.txt
