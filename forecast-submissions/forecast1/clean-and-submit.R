@@ -31,10 +31,12 @@ pose_forecast2 <- pose_forecast %>%
   mutate(ensemble = gsub("ens", "", ensemble)) %>%
   mutate(ensemble = as.numeric(ensemble) + 1) %>%
   mutate(forecast = 1, data_assimilation = 0) %>%
-  dplyr::select(time, siteID, ensemble, temperature, forecast, data_assimilation)
+  mutate(oxygen = NA) %>%
+  dplyr::select(time, siteID, ensemble, oxygen, temperature, forecast, data_assimilation)
 
 pose_forecast2 %>% write_csv("forecast-submissions/forecast1/aquatics-2021-05-01-BTW.csv")
 
+# use generate-metadata.R to create new XML from YML and CSV
 neon4cast::submit(forecast_file = 'forecast-submissions/forecast1/aquatics-2021-05-01-BBTW.csv',
                   metadata = 'forecast-submissions/forecast1/aquatics-2021-05-01-BBTW.xml')
 
