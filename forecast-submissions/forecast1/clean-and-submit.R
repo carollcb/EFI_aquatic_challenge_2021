@@ -33,7 +33,7 @@ pose_forecast2 <- pose_forecast %>%
   mutate(forecast = 1, data_assimilation = 0) %>%
   dplyr::select(time, siteID, ensemble, temperature, forecast, data_assimilation)
 
-barc_forecast2 %>% write_csv("forecast-submissions/forecast1/aquatics-2021-05-01-BTW.csv")
+pose_forecast2 %>% write_csv("forecast-submissions/forecast1/aquatics-2021-05-01-BTW.csv")
 
 neon4cast::submit(forecast_file = 'forecast-submissions/forecast1/aquatics-2021-05-01-BBTW.csv',
                   metadata = 'forecast-submissions/forecast1/aquatics-2021-05-01-BBTW.xml')
