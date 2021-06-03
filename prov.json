@@ -1,0 +1,143 @@
+{
+  "@context": {
+    "dcat": "http://www.w3.org/ns/dcat#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "dct": "http://purl.org/dc/terms/",
+    "sdo": "http://schema.org/",
+    "cito": "http://purl.org/spar/cito/",
+    "id": "@id",
+    "type": "@type",
+    "identifier": {
+      "@id": "dct:identifier",
+      "@type": "@id"
+    },
+    "title": "dct:title",
+    "description": "dct:description",
+    "issued": "dct:issued",
+    "format": "dct:format",
+    "mediaType": "dcat:mediaType",
+    "keyword": "dcat:keyword",
+    "theme": "dcat:theme",
+    "modified": "dcat:modified",
+    "downloadURL": "dcat:downloadURL",
+    "publisher": {
+      "@id": "dcat:publisher",
+      "@type": "@id"
+    },
+    "contactPoint": {
+      "@id": "dcat:contactPoint",
+      "@type": "@id"
+    },
+    "spatial": {
+      "@id": "dct:spatial",
+      "@type": "@id"
+    },
+    "temporal": {
+      "@id": "dct:temporal",
+      "@type": "@id"
+    },
+    "license": {
+      "@id": "dct:license",
+      "@type": "@id"
+    },
+    "creator": {
+      "@id": "dcat:creator",
+      "@type": "@id"
+    },
+    "compressFormat": "dcat:compressFormat",
+    "byteSize": "dcat:byteSize",
+    "wasGeneratedAtTime": "prov:wasGeneratedAtTime",
+    "startedAtTime": "prov:startedAtTime",
+    "endedAtTime": "prov:startedAtTime",
+    "wasDerivedFrom": {
+      "@id": "prov:wasDerivedFrom",
+      "@type": "@id"
+    },
+    "wasGeneratedBy": {
+      "@id": "prov:wasGeneratedBy",
+      "@type": "@id"
+    },
+    "generated": {
+      "@id": "prov:generated",
+      "@type": "@id"
+    },
+    "used": {
+      "@id": "prov:used",
+      "@type": "@id"
+    },
+    "wasRevisionOf": {
+      "@id": "prov:wasRevisionOf",
+      "@type": "@id"
+    },
+    "isDocumentedBy": {
+      "@id": "cito:isDocumentedBy",
+      "@type": "@id"
+    },
+    "distribution": {
+      "@id": "dcat:distribution",
+      "@type": "@id"
+    },
+    "Dataset": "dcat:Dataset",
+    "Activity": "prov:Activity",
+    "Distribution": "dcat:Distribution",
+    "SoftwareSourceCode": "sdo:SoftwareSourceCode"
+  },
+  "@graph": [
+    [
+      {
+        "id": "hash://sha256/6736e6b2cfebec831d8f069133801117f03cbecb84a4f9fee659a839f1ee6197",
+        "type": "Distribution",
+        "identifier": "hash://sha256/6736e6b2cfebec831d8f069133801117f03cbecb84a4f9fee659a839f1ee6197",
+        "title": "aquatics-targets.csv.gz",
+        "description": "Input data",
+        "format": "application/gzip",
+        "compressFormat": "gzip",
+        "byteSize": 77348,
+        "isDocumentedBy": "hash://sha256/59c2515ef00ce1d791895c101e8dc1c61545c0c220bf7076b250d32cdd50a5b2",
+        "wasGeneratedAtTime": "2021-03-22 09:04:22"
+      }
+    ],
+    [
+      {
+        "type": ["Distribution", "SoftwareSourceCode"],
+        "id": "hash://sha256/d4a79a1f0dab29905bb1513d4b558166c9ff5a05e8a9df99c0db3555fb8332a8",
+        "identifier": "hash://sha256/d4a79a1f0dab29905bb1513d4b558166c9ff5a05e8a9df99c0db3555fb8332a8",
+        "title": "03_generate_null_forecast_aquatics.R",
+        "description": "R code",
+        "format": "application/R",
+        "isDocumentedBy": "hash://sha256/59c2515ef00ce1d791895c101e8dc1c61545c0c220bf7076b250d32cdd50a5b2"
+      }
+    ],
+    [
+      {
+        "id": "hash://sha256/380f854298d0f640a70b3a6fad3bba47b9f90f856cb0dd273c9d67013e7c9287",
+        "type": "Distribution",
+        "identifier": "hash://sha256/380f854298d0f640a70b3a6fad3bba47b9f90f856cb0dd273c9d67013e7c9287",
+        "title": "aquatics-2021-03-01-EFInull.csv.gz",
+        "description": "output data",
+        "format": "application/gzip",
+        "compressFormat": "gzip",
+        "byteSize": 519471,
+        "wasGeneratedAtTime": "2021-03-22 09:05:31",
+        "wasDerivedFrom": "hash://sha256/6736e6b2cfebec831d8f069133801117f03cbecb84a4f9fee659a839f1ee6197",
+        "wasGeneratedBy": {
+          "type": "Activity",
+          "id": "urn:uuid:19b27753-e8f9-404d-bfa5-1240b63d5e6a",
+          "description": "Running R script",
+          "used": ["hash://sha256/6736e6b2cfebec831d8f069133801117f03cbecb84a4f9fee659a839f1ee6197", "hash://sha256/d4a79a1f0dab29905bb1513d4b558166c9ff5a05e8a9df99c0db3555fb8332a8"],
+          "generated": "hash://sha256/380f854298d0f640a70b3a6fad3bba47b9f90f856cb0dd273c9d67013e7c9287",
+          "endedAtTime": "2021-03-22 09:05:31"
+        }
+      }
+    ],
+    {
+      "id": "hash://sha256/59c2515ef00ce1d791895c101e8dc1c61545c0c220bf7076b250d32cdd50a5b2",
+      "type": "Distribution",
+      "identifier": "hash://sha256/59c2515ef00ce1d791895c101e8dc1c61545c0c220bf7076b250d32cdd50a5b2",
+      "title": "aquatics-2021-03-01-EFInull.xml",
+      "description": "Metadata document",
+      "format": "application/xml",
+      "byteSize": 9803
+    }
+  ]
+}
